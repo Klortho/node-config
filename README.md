@@ -1,3 +1,22 @@
+# klortho's fork
+
+
+
+References:
+
+* The proximate bug I'm trying to fix: 
+  [Bug #266](https://github.com/lorenwest/node-config/issues/266) - Bug: 
+  defer'ed values can end up in the final configuration object depending 
+  resolution order. AKA "the double-defer bug"
+* Python 
+  [settings-resolver](https://github.com/Klortho/settings-resolver/blob/master/settings_resolver.py)
+* [grunt-template-functions](https://github.com/Klortho/grunt-template-functions) - 
+  This is incomplete, because it doesn't use getters.
+
+
+
+
+
 Configure your Node.js Applications
 ===================================
 
