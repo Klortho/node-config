@@ -12,15 +12,47 @@ The code I have right now is not working, but it should be close. As I was writi
 the description, the need for two passes became more clear, and that is not
 fully implemented yet.
 
-To do:
+## To do, misc
 
 * Find and destroy "FIXME"s
 * Convert the test project "fix-deferreds" into a proper set of tests.
-* Add tests for:
-    * arrays
-    * deferreds that occur in overrides
+* Look into using "relative" arguments to the deferreds.
+* Look at 
 
-References:
+
+## Tests to add
+
+***arrays*** - with and without deferred members
+
+***deferreds that occur in overrides***
+
+***config objects created during resolution***
+
+Like the following. 
+
+```javascript
+{
+  propA: d(cfg => ({
+    kidAA: {
+      grandKidAAA: d(cfg => 2)
+    },
+  })),
+  // See how this one reaches into the dynamically created object, and "clones"
+  // a dynamically instatiated object from inside it.
+  propB: d(cfg => cfg.propA.kidAA),
+}
+```
+
+***submodule configs***
+
+See [this wiki 
+page](https://github.com/lorenwest/node-config/wiki/Sub-Module-Configuration)
+
+
+
+
+
+## References
 
 * The proximate bug I'm trying to fix: 
   [Bug #266](https://github.com/lorenwest/node-config/issues/266) - Bug: 
@@ -30,7 +62,8 @@ References:
   [settings-resolver](https://github.com/Klortho/settings-resolver/blob/master/settings_resolver.py)
 * [grunt-template-functions](https://github.com/Klortho/grunt-template-functions) - 
   This is incomplete, because it doesn't use getters.
-
+* My xmltools (stash: /projects/JATS/repos/xmltools/browse/main.js) scheme for 
+  recursively instantiating configurable objects.
 
 
 
