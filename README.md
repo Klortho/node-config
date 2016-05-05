@@ -1,6 +1,24 @@
 # klortho's fork
 
+This branch is an attempt to fix the problem with deferreds in node-config.
+Right now I am working with a test project in the "fix-deferreds" subdirectory
+here.
 
+See my comments on 
+[issue #266](https://github.com/lorenwest/node-config/issues/266#issuecomment-217063840),
+which describes the algorithm in some detail. 
+
+The code I have right now is not working, but it should be close. As I was writing
+the description, the need for two passes became more clear, and that is not
+fully implemented yet.
+
+To do:
+
+* Find and destroy "FIXME"s
+* Convert the test project "fix-deferreds" into a proper set of tests.
+* Add tests for:
+    * arrays
+    * deferreds that occur in overrides
 
 References:
 
