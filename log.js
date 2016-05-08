@@ -33,7 +33,7 @@ log.exit = function() {
 };
 
 log.exitAfter = -1;   // set this to cause this to abort after a fixed number of messages
-log.enabled = true;
+log.enabled = false;
 
 
 // Function that turns the `arguments` variable into an Array

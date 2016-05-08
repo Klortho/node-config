@@ -2,6 +2,17 @@ var df = require('config/defer').deferConfig;
 var path = require('path');
 
 module.exports = {
+  // From issue #231
+  images: {
+    src: 'foobar',
+  },
+  srcSvgGlob: [
+    '/plyr/src/sprite/*.svg',
+    df(function (cfg) {
+      return cfg.images.src + '/*.svg';
+    })
+  ],
+
   a1: 1,
   b1: 2,
   c1: df(cfg => cfg.a1),

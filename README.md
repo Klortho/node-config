@@ -26,7 +26,8 @@ config objects, rather than replacing them.
 * Find and destroy "FIXME"s
 * Convert the test project "fix-deferreds" into a proper set of tests.
 * Look into using "relative" arguments to the deferreds.
-* Get rid of log.js
+* Check to see if it fixes any other issues/PRs:
+    - #231
 
 ## Tests to add
 
