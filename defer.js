@@ -1,4 +1,10 @@
 var log = require('./log.js');
+var util = require('util');
+
+// helper function to display an object
+function pretty(obj) {
+  return util.inspect(obj, {showHidden: false, depth: null});
+}
 
 // Create a deferredConfig prototype so that we can check for it when reviewing the configs later.
 function DeferredConfig () {}
@@ -71,7 +77,7 @@ var Resolver = function(mainResolver, config, selfKey, parent) {
           var isDeferred = function(val) { return val instanceof DeferredConfig; };
           while(isDeferred(configValue)) {
             log('Got a deferred; let\'s call it');
-            configValue = configValue.resolve(mainResolver);
+            configValue = configValue.resolve.call(mainResolver, mainResolver);
             log('Value from the deferred is ' + configValue);
           }
 
@@ -105,27 +111,36 @@ Resolver.prototype.toString = function() {
   return 'Resolver <' + this.key + '>';
 };
 Resolver.prototype.walk = function() {
-  var self = this;
+  var self = this,
+      config = self.config;
+
   log.enter('Walking ' + self.key);
   self.childKeys.forEach(function(key) {
     var v = self[key];
-    if (v instanceof DeferredConfig) {
-      throw EvalError('Straggling deferred!');
-    }
-    else if (v instanceof Resolver) {
-      v.walk();
-      self.config[key] = v.config;
-    }
-    else if (v.constructor == Object || v.constructor == Array) {
-      self.walkObject(v);
-    }
-    else {  // leaf node
-      log('leaf node; nothing to do: ' + v);
+
+    // Note: I checked these tests to make sure I covered at least all of
+    // the cases covered by extendDeep
+    if (v) {
+      if (v instanceof Date) {
+        config[key] = v;
+      }
+      else if (v instanceof Resolver) {
+        v.walk();
+        self.config[key] = v.config;
+      }
+      else if ((typeof v === 'object') && ('constructor' in v) && (
+        v.constructor == Object || v.constructor == Array)) {
+        self.walkObject(v);
+      }
+      else if (v instanceof DeferredConfig) {
+        throw EvalError('Dangling deferred!');
+      }
     }
   });
   log.exit();
 };
 
+// FIXME: Don't we need this?
 Resolver.prototype.walkObject = function(obj) {
 
 }
@@ -133,20 +148,13 @@ Resolver.prototype.walkObject = function(obj) {
 // The "main" function that does the resolving
 var resolveMain = function(mainConfig) {
   // Create resolver for the first level; includes first-level getters.
-  // FIXME: is the top-level config always an object?
   var mainResolver = new Resolver(null, mainConfig, null);
-
+  // Walking the whole tree causes all of the config objects to be updated
   mainResolver.walk();
-  // Deep copy should resolve everything
-  //var resolved = deepCopy(mainResolver);
-
-  // Copy top-level children into the mainConfig
-  //Object.keys(resolved).forEach(function(key) {
-  //  mainConfig[key] = resolved[key];
-  //});
+  log('Done, mainConfig: ' + pretty(mainConfig));
 }
 
-
+/*
 var deepCopy = function(parent) {
   log.enter('deepCopy, parent: ' + parent);
   var result;
@@ -164,7 +172,7 @@ var deepCopy = function(parent) {
   log.exit();
   return result;
 }
-
+*/
 
 module.exports = {
   deferConfig: deferConfig,

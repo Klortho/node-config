@@ -2,4 +2,4 @@
 'use strict';
 
 var config = require('config');
-console.log('config: ', config);
+//console.log('config: ', config);
