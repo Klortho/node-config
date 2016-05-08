@@ -8,19 +8,25 @@ See my comments on
 [issue #266](https://github.com/lorenwest/node-config/issues/266#issuecomment-217063840),
 which describes the algorithm in some detail. 
 
-The code I have right now is not working, but it should be close. As I was writing
-the description, the need for two passes became more clear, and that is not
-fully implemented yet.
+The code I have right now is mostly working, but has some issues.
+
+The main issue is with how the Resolvers get disposed of at the end,
+during the "deepCopy". Right now it is very naive about the type, and
+doesn't, for example, handle Arrays at all well. 
+
+Strategy: let's leverage this library's utilities. Each Resolver has a reference
+to the original config that it is mirroring. Let's extend the original 
+config objects, rather than replacing them.
+
+
+
 
 ## To do, misc
 
 * Find and destroy "FIXME"s
 * Convert the test project "fix-deferreds" into a proper set of tests.
-
-
 * Look into using "relative" arguments to the deferreds.
-
-
+* Get rid of log.js
 
 ## Tests to add
 

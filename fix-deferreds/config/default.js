@@ -11,34 +11,42 @@ module.exports = {
   f1: df(cfg => cfg.g1 + cfg.a1),
   g1: df(cfg => cfg.a1),
 
-  // nested objects
+
+   // nested objects
   h1: { ha: 5,
-       hb: df(cfg => cfg.a1 + cfg.e1), },
+        hb: df(cfg => cfg.a1 + cfg.e1), },
 
   // nested objects as the results of deferreds
-  i1: df(cfg => ({
+  i0: df(cfg => ({
     ia: 1,
-    ib: cfg.b1,
-    ic: cfg.h1,
-    id: df(cfg => df(cfg => cfg.h1)),
   })),
 
-  a2: 1,
+    // nested objects as the results of deferreds
+    i1: df(cfg => ({
+      ia: 1,
+      ib: cfg.b1,
+      ic: cfg.h1,
+      id: df(cfg => df(cfg => cfg.h1)),
+    })),
+
+   a2: 1,
   b2: df(cfg => cfg.a2),
-  c2: df(cfg => ({
-    ca: cfg.d2,
-    cb: cfg.e2.e0,
-  })),
+  c2: df(cfg => [
+    cfg.d2,
+    cfg.e2.e0,
+  ]),
   d2: df(cfg => ({
     d0: 0,
     d1: 1,
   })),
   e2: df(cfg => ({
-    e0: df(cfg => ({
-      e00: 'hello',
-      e01: cfg.b2,
-    })),
+    e0: df(cfg => [
+      'hello',
+      cfg.b2,
+    ]),
   })),
+
+
 
 
   /*
