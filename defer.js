@@ -1,7 +1,6 @@
-'use strict';
-var assert = require('assert');
+// See resolver.md for some notes about how this works.
 
-// Create a deferredConfig prototype so that we can check for it when reviewing the configs later.
+// Class that wraps special functions that are evaluated after all config overrides are in place.
 function DeferredConfig () {}
 
 // Users use this function in their JavaScript config files to specify config values that depend
@@ -12,144 +11,109 @@ function deferConfig(func) {
   return obj;
 }
 
-// Resolves all of the configuration variables, after all of the overrides have been established.
-var resolve = function(mainConfig) {
-  var mainResolver = null;
+// The main function that resolves all of the deferreds.
+function resolve(mainConfig) {
+  var main = new Resolver(mainConfig);
+  main.resolve();
+}
 
-  /**
-   *  Wraps a configuration item in a Resolver object, if needed.
-   *
-   * @private
-   * @method wrap
-   * @param node - atom, object, deferred, or resolver
-   * @return either an atom or a resolver
-   */
+// Resolver objects define getters for each of the properties in a config object.
+// The purpose of the Resolver objects is to proxy the config objects, so that they
+// can participate in expressions inside deferred functions.
+// Restriction: only enumerable, "own" properties are proxied. So, for example, you can't use
+// them with class methods.
+// The constructor does not recurse; it only defines getters for the immediate children.
+var Resolver = function(config, main) {
+  var self = this;
+  if (!main) main = self;
 
-  var wrap = function(node) {
-    var t = nodeType(node);
-    return (t === 'atom') ? node :
-      (t === 'resolver') ? node :
-        (t === 'deferred') ? wrap(node.resolve.call(mainResolver, mainResolver)) :
-          new Resolver(node);
+  // The enumerable keys of config that we care about
+  var childKeys = Object.keys(config).filter(function(k) {
+    return config.hasOwnProperty(k) && typeof config[k] !== 'undefined';
+  });
+
+  // Create a non-enumerable property, __data__, to hold bookkeeping data
+  var data = {
+    main: main,
+    config: config,
+    childKeys: childKeys,
   };
+  Object.defineProperty(self, '__data__', {
+    __proto__: null,
+    value: data,
+  });
 
-
-
-  // Objects of this class define getters for each of the properties of the config object.
-  // The constructor does not recurse; it only defines getters for the immediate children
-  // of the current config.
-  var Resolver = function(config) {
-    var self = this;
-    if (!mainResolver) mainResolver = self;
-    // The enumerable keys of config that we care about
-    var childKeys = Object.keys(config).filter(function(k) {
-      return config.hasOwnProperty(k) && typeof config[k] !== 'undefined';
-    });
-    // The memoized results of the getters
-    var values = {};
-
-    // Define these as properties. It's important that these be non-enumerable.
-    [ ['main', mainResolver],
-      ['config', config],
-      ['childKeys', childKeys],
-    ].map(function(pair) {
-      Object.defineProperty(self, pair[0], {
-        __proto__: null,
-        value: pair[1],
-      });
-    });
-
-    // Make the getters
-    childKeys.forEach(function(key) {
-      Object.defineProperty(self, key, {
-        __proto__: null,
-        enumerable: true,
-        configurable: false,
-        get: function() {
-          if (key in values) return values[key];
-          var node = config[key];
-
-
-
-          var rv = wrap(node);
-          values[key] = rv;
-          return rv;
-        }
-      });
-    });
-  };
-  Resolver.prototype.walk = function() {
-    var self = this,
-        config = self.config;
-
-    self.childKeys.forEach(function(key) {
-      var v = self[key];
-      // Note: I checked these tests against extendDeep; to make sure it covers at least the same
-      // cases
-      if (v) {
-        if (v instanceof Date) {
-          config[key] = v;
-        }
-        else if (v instanceof Resolver) {
-          v.walk();
-          config[key] = v.config;
-        }
-        else if ((typeof v === 'object') && ('constructor' in v) && (
-          v.constructor == Object || v.constructor == Array)) {
-          self.walkObject(v);
-        }
-        else if (v instanceof DeferredConfig) {
-          throw EvalError('Dangling deferred!');
-        }
-        else {
-          config[key] = v;
-        }
+  // Make the getters.
+  // Contract: for every enumerable property (k, v) of a config node, the getter
+  // returns either the original atom from the config, or a resolver (never an object or a
+  // deferred)
+  var values = {};  // memoize the results
+  childKeys.forEach(function(key) {
+    Object.defineProperty(self, key, {
+      __proto__: null,
+      enumerable: true,
+      configurable: false,
+      get: function() {
+        if (key in values) return values[key];
+        return values[key] = self.newNode(config[key]);
       }
     });
-  };
-
-  // FIXME: Don't we need this?
-  Resolver.prototype.walkObject = function(obj) {
-  };
-
-  // The resolver is concerned with the data types of the nodes of the configuration tree. From its
-  // perspective, there are four: atoms, objects (which include arrays), DeferredConfigs
-  // deferreds, for short), and Resolvers.
-
-  // This revised type test is to address one concern in this PR:
-  // https://github.com/lorenwest/node-config/pull/205. It should be construed as implying
-  // that that PR is a good idea, but this should do no harm.
-  var isDeferred = function(node) { return node instanceof DeferredConfig ||
-    ( node && (typeof node === 'object') && ('constructor' in node) &&
-    (node.constructor.name === 'DeferredConfig') ); };
-
-  var nodeType = function(node) {
-    if (node instanceof Resolver) {
-      return 'resolver';
-    }
-    if (typeof node !== 'object' || !node) return 'atom';
-    if (node instanceof Date) return 'atom';
-    if (node instanceof DeferredConfig ||
-      (('constructor' in node) && (node.constructor.name === 'DeferredConfig')))
-      return 'deferred';
-    return 'object';
-  };
-
-
-  // Create resolver for the first level; includes first-level getters.
-  mainResolver = new Resolver(mainConfig, null);
-  // Walking the whole tree causes all of the config objects to be updated
-  mainResolver.walk();
-
-
-
-
+  });
 };
 
+// resolver.newNode() - passes through or creates resolver tree nodes corresponding to config
+// tree nodes. The `node` argument can be of any type. This evaluates deferred functions, and wraps
+// config objects in resolvers, as needed.
+// Contract: the return value is guaranteed to be an atom or a resolver
+Resolver.prototype.newNode = function(node) {
+  var self = this,
+      main = self.__data__.main;
+  var t = nodeType(node);
+  return (t === 'atom') ? node :
+         (t === 'resolver') ? node :
+         // deferreds are evaluated recursively:
+         (t === 'deferred') ? self.newNode(node.resolve.call(main, main)) :
+         new Resolver(node, main);
+};
+
+// resolver.resolve() - recursively resolves all of the data in the config tree.
+// Contract: after this executes, the `config` node corresponding to this resolver will be an
+// atom or an object tree such that:
+// - there are no deferreds or resolvers anywhere in the tree
+// - every node in the tree is the corresponding original atom or object from the config
+//   tree (i.e., there are no clones)
+Resolver.prototype.resolve = function() {
+  var self = this,
+      data = self.__data__,
+      config = data.config,
+      childKeys = data.childKeys;
+  childKeys.forEach(function(key) {
+    var v = self[key];      // either an atom or a resolver
+    if (nodeType(v) === 'atom')
+      config[key] = v;
+    else {  // resolver
+      v.resolve();
+      config[key] = v.__data__.config;
+    }
+  });
+};
+
+// There are four main types for the nodes in a configuration tree: atoms, objects (which
+// include arrays), DeferredConfigs (deferreds, for short), and resolvers.
+var nodeType = function(node) {
+  if (node instanceof Resolver) return 'resolver';
+  if (typeof node !== 'object' || !node) return 'atom';
+  if (node instanceof Date) return 'atom';
+  // The test for DeferredConfig addresses the concern in this PR (but it's not a complete fix):
+  // https://github.com/lorenwest/node-config/pull/205.
+  if (node instanceof DeferredConfig ||
+    (('constructor' in node) && (node.constructor.name === 'DeferredConfig')))
+    return 'deferred';
+  return 'object';
+};
 
 module.exports = {
   deferConfig: deferConfig,
   DeferredConfig: DeferredConfig,
   resolve: resolve,
 };
-

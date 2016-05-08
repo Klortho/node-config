@@ -38,18 +38,19 @@ module.exports = {
     a: { a: 21, b: 9, },
     b: [ 9, 'snorky', df(cfg => cfg.a1)]
   })),
+
+  // deferreds within deferreds
+  i1: df(cfg => ({
+    ic: cfg.h1,  // .h1 has a deferred in it
+    id: df(cfg => df(cfg => cfg.h1)),
+  })),
+
   // and referencing those nested items
   i2: df(cfg => ({
     z: 5,
     a: { a: cfg.i0.b[1], b: cfg.i0.b[2], },
     b: [ -2, cfg.i0.b, ],
     c: df((cfg) => cfg.i2.b[1][1]),   //=> 'snorky'; references a sibling in the same subtree
-  })),
-
-  // deferreds within deferreds
-  i1: df(cfg => ({
-    ic: cfg.h1,  // .h1 has a deferred in it
-    id: df(cfg => df(cfg => cfg.h1)),
   })),
 
   a2: 1,
