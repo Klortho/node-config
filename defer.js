@@ -1,5 +1,3 @@
-
-
 // Create a deferredConfig prototype so that we can check for it when reviewing the configs later.
 function DeferredConfig () {}
 
@@ -47,9 +45,14 @@ var Resolver = function(mainResolver, config) {
         else {
           var configValue = config[key];
 
-          // FIXME: use the feature-test as described on one of the gh issues
-          var isDeferred = function(val) { return val instanceof DeferredConfig; };
-          while(isDeferred(configValue)) {
+          // This revised type test is to address one concern in this PR:
+          // https://github.com/lorenwest/node-config/pull/205. It should be construed as implying
+          // that that PR is a good idea, but this should do no harm.
+          var isDeferred = function(val) { return val instanceof DeferredConfig ||
+            ( val && (typeof val === 'object') && ('constructor' in val) &&
+              (val.constructor.name === 'DeferredConfig') ); };
+
+          while (isDeferred(configValue)) {
             configValue = configValue.resolve.call(mainResolver, mainResolver);
           }
 

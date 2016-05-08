@@ -28,6 +28,9 @@ config objects, rather than replacing them.
 * Look into using "relative" arguments to the deferreds.
 * Check to see if it fixes any other issues/PRs:
     - #231
+* Check it against https://github.com/lorenwest/node-config/pull/175 -
+  I'm concerned about how my implementation will behave inside extendDeep,
+  or other functions
 
 ## Tests to add
 
