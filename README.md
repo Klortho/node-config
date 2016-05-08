@@ -19,6 +19,8 @@ To do:
 * Add tests for:
     * arrays
     * deferreds that occur in overrides
+    * nested deferreds (e.g. `d(()=> d(()=> ...))`. If we want to say that deferreds can
+      occur anywhere regular data does, then there shouldn't be anything wrong with this
 
 References:
 
