@@ -68,6 +68,7 @@ var Resolver = function(mainResolver, config) {
           }
           else {
             rv = new Resolver(mainResolver, configValue);
+            //config[key] = rv.config;
           }
         }
         values[key] = rv;

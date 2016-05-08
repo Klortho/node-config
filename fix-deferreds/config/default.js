@@ -14,28 +14,41 @@ module.exports = {
   ],
 
   a1: 1,
-  b1: 2,
   c1: df(cfg => cfg.a1),
-  d1: df(cfg => cfg.a1 + cfg.b1),
-  e1: df(cfg => cfg.a1 + cfg.b1 + cfg.c1 + cfg.d1),
+  d1: df(cfg => cfg.a1 + cfg.a1),
+  e1: df(cfg => cfg.a1 + cfg.c1 + cfg.d1),
   // This one references an item that (perhaps) is evaluated later
   f1: df(cfg => cfg.g1 + cfg.a1),
   g1: df(cfg => cfg.a1),
 
-  // nested objects
+  // deferreds in descendants
   h1: { ha: 5,
         hb: df(cfg => cfg.a1 + cfg.e1), },
+  h2: {
+    a: {
+      a: [
+        7, 'fleegle',
+        df(cfg => cfg.a1 + cfg.e1),
+      ],
+    },
+  },
 
-  // nested objects as the results of deferreds
+  // deferreds that resolve to trees
   i0: df(cfg => ({
-    ia: 1,
+    a: { a: 21, b: 9, },
+    b: [ 9, 'snorky', df(cfg => cfg.a1)]
+  })),
+  // and referencing those nested items
+  i2: df(cfg => ({
+    z: 5,
+    a: { a: cfg.i0.b[1], b: cfg.i0.b[2], },
+    b: [ -2, cfg.i0.b, ],
+    c: df((cfg) => cfg.i2.b[1][1]),   //=> 'snorky'; references a sibling in the same subtree
   })),
 
-  // nested objects as the results of deferreds
+  // deferreds within deferreds
   i1: df(cfg => ({
-    ia: 1,
-    ib: cfg.b1,
-    ic: cfg.h1,
+    ic: cfg.h1,  // .h1 has a deferred in it
     id: df(cfg => df(cfg => cfg.h1)),
   })),
 
