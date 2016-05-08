@@ -70,17 +70,17 @@ module.exports = {
   })),
   f2: {
     fa: {
-      faa: {
-        faaa: df(cfg => cfg.a1),
+      a: {
+        a: df(cfg => cfg.a1),
       }
     },
     fb: {
-      fba: [
+      a: [
         5,
         'blue',
-        { fba3a: {
-            fba3aa: df(cfg => cfg.c1),
-            fba3ab: 'orange',
+        { a: {
+            a: df(cfg => cfg.c1),
+            b: 'orange',
           },
         },
       ],
