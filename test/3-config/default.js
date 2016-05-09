@@ -39,10 +39,17 @@ config.name = defer(cfg => ({
 }));
 
 ///////////////////////////////////////////////////
+// This test/example is one way dependency injection could be done. Define
+// a class to provide the default implementation of a service adapter.
+// The runtime config `service` object will have a registry.
 var MockServiceAdapter = function() {
   this.service = 'mock service';
 };
 MockServiceAdapter.prototype.message = 'For testing only';
+var defaultServiceEntry = function(svcName) {
+
+}
+
 
 config.service = {
   // Cross-reference names to classes; other configs can add to this list
