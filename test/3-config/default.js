@@ -1,5 +1,6 @@
 
 var defer = require('../../defer').deferConfig;
+var process = require('process');
 
 var config = {
   siteTitle : 'Site title',
@@ -31,6 +32,33 @@ config.map = {
     return { lat: this.latitude, lon: this.longitude };
   }),
 };
+
+config.name = defer(cfg => ({
+  first: 'Robert',
+  nickname: defer(cfg => cfg.name.first == 'Robert' ? 'Bob' : 'Bruce'),
+}));
+
+///////////////////////////////////////////////////
+var MockServiceAdapter = function() {
+  this.service = 'mock service';
+};
+MockServiceAdapter.prototype.message = 'For testing only';
+
+config.service = {
+  // Cross-reference names to classes; other configs can add to this list
+  registry: {
+    mock: new MockServiceAdapter(),
+  },
+  // Baseline for deferred testing: "demo" service doesn't have an override:
+  demoName: 'mock',
+  demoService: defer(cfg => cfg.service.registry[cfg.service.demoName]),
+  demoMessage: defer(cfg => cfg.service.demoService.message),
+  // "Active" service will be overridden:
+  activeName: 'mock',
+  activeService: defer(cfg => cfg.service.registry[cfg.service.activeName]),
+  activeMessage: defer(cfg => cfg.service.activeService.message),
+};
+
 
 // "stress test" of the deferred function. Some of this data is here, and some in local.js.
 var stressConfig = {

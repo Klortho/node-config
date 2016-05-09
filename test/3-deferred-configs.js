@@ -69,6 +69,17 @@ vows.describe('Tests for deferred values').addBatch({
     "defer functions which return objects should still be treated as a single value." : function () {
       assert.deepEqual(CONFIG.get('map.centerPoint'), { lat: 3, lon: 4 });
     },
+
+    "nested defer functions work": function() {
+      assert.equal(CONFIG.get('name.nickname'), 'Bob');
+    },
+
+    'service registry example': function() {
+      assert.equal(CONFIG.get('service.demoService').message, 'For testing only');
+      assert.equal(CONFIG.get('service.demoService.message'), 'For testing only');
+      assert.equal(CONFIG.get('service.demoMessage'), 'For testing only');
+    },
+    
     
     "deferred stress test" : function() {
       // Grab the subset of the result CONFIG that we're interested in

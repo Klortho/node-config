@@ -8,6 +8,18 @@ config.map = {
   centerPoint :  { lat: 3, lon: 4 },
 };
 
+/*
+config.service = {
+  name: 'mock',
+  registry: {
+    mock: new ServiceAdapter(),
+  },
+  active: defer(cfg => cfg.service.registry[cfg.service.name]),
+  message: defer(cfg => cfg.service.active.message),
+};
+*/
+
+
 var stressConfig = {
   // From issue #231
   images: {
