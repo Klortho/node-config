@@ -38,34 +38,19 @@ config.name = defer(cfg => ({
   nickname: defer(cfg => cfg.name.first == 'Robert' ? 'Bob' : 'Bruce'),
 }));
 
-///////////////////////////////////////////////////
-// This test/example is one way dependency injection could be done. Define
-// a class to provide the default implementation of a service adapter.
-// The runtime config `service` object will have a registry.
-var MockServiceAdapter = function() {
-  this.service = 'mock service';
-};
-MockServiceAdapter.prototype.message = 'For testing only';
-var defaultServiceEntry = function(svcName) {
-
-}
-
+// Here's one way you could do dependency injection.
+// Define a class to provide the default implementation of a service adapter.
+// At runtime, some other config file could add to the registry, and/or reset the active service.
+var MockServiceAdapter = function() {};
+MockServiceAdapter.prototype.message = 'Mock service for development';
 
 config.service = {
-  // Cross-reference names to classes; other configs can add to this list
   registry: {
-    mock: new MockServiceAdapter(),
+    mock: MockServiceAdapter,
   },
-  // Baseline for deferred testing: "demo" service doesn't have an override:
-  demoName: 'mock',
-  demoService: defer(cfg => cfg.service.registry[cfg.service.demoName]),
-  demoMessage: defer(cfg => cfg.service.demoService.message),
-  // "Active" service will be overridden:
-  activeName: 'mock',
-  activeService: defer(cfg => cfg.service.registry[cfg.service.activeName]),
-  activeMessage: defer(cfg => cfg.service.activeService.message),
+  name: 'mock',
+  active: defer(cfg => cfg.service.registry[cfg.service.name]),
 };
-
 
 // "stress test" of the deferred function. Some of this data is here, and some in local.js.
 var stressConfig = {

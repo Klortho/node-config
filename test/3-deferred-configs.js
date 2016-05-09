@@ -75,14 +75,9 @@ vows.describe('Tests for deferred values').addBatch({
     },
 
     'service registry example': function() {
-      assert.equal(CONFIG.get('service.demoService').message, 'For testing only');
-      assert.equal(CONFIG.get('service.demoService.message'), 'For testing only');
-      assert.equal(CONFIG.get('service.demoMessage'), 'For testing only');
-
-      assert.equal(CONFIG.get('service.activeService').message, 'Real thing');
-      assert.equal(CONFIG.get('service.activeService.message'), 'Real thing');
-      assert.equal(CONFIG.get('service.activeMessage'), 'Real thing');
-
+      var svc = CONFIG.get('service.active');
+      assert.equal(svc.message, 'Real thing');
+      assert.equal(CONFIG.get('service.active.message'), 'Real thing');
     },
     
     

@@ -8,30 +8,16 @@ config.map = {
   centerPoint :  { lat: 3, lon: 4 },
 };
 
-
-///////////////////////////////////////////////////
-var RealServiceAdapter = function() {
-  this.service = 'mock service';
-};
+var RealServiceAdapter = function() {};
 RealServiceAdapter.prototype.message = 'Real thing';
-
 config.service = {
+  // Add our service adapter to the regiistry
   registry: {
-    'real': new RealServiceAdapter(),
+    'real': new RealServiceAdapter()
   },
-  activeName: 'real',
+  // Override the active service
+  name: 'real'
 };
-/*
-config.service = {
-  name: 'mock',
-  registry: {
-    mock: new ServiceAdapter(),
-  },
-  active: defer(cfg => cfg.service.registry[cfg.service.name]),
-  message: defer(cfg => cfg.service.active.message),
-};
-*/
-
 
 var stressConfig = {
   // From issue #231

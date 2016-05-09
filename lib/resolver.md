@@ -24,11 +24,8 @@ During resolution, the deferred function for `header` is executed. If the value 
 
 Instead, the value of the `cfg` argument inside the deferred function body is not the actual config object, but an instance of the Resolver class. It has getter functions for each of the properties of the real config object. In the example above, when the `header` deferred is executed, the expression `cfg.siteTitle` is evaluated, which causes that getter function to be executed. That function is smart enough to recognize that the value of `siteTitle` comes from a deferred function; so it executes it, and returns the correct result.
 
-This approach is very powerful, and enables complex interdependencies among config variables, without ever having to worry about the time-ordering of the evaluations. There are just a few limitations:
-
-***No circular references***
-
-So, for example, this won't work:
+This approach is very powerful, and enables complex interdependencies among config variables, without ever having to worry about the time-ordering of the evaluations. Of course, circular references are not allowed.
+So, for example, this wouldn't work:
 
 ```javascript
 name: defer(cfg => ({
@@ -37,7 +34,7 @@ name: defer(cfg => ({
 })),
 ```
 
-At first glance, it might seem that this isn't circular, since `nickname` is referencing a sibling. But, it is, because the reference to `cfg.name` must be evaluated first, and it's inside the deferred function for itself. This could be fixed easily, however, using a nested deferred:
+At first glance, it might seem that this isn't circular, since `nickname` is referencing a sibling, not itself. However, when evaluating `nickname`, the reference to `cfg.name` must be evaluated first, and it's inside it's own deferred function, which makes it circular. This could be fixed easily, however, using a nested deferred:
 
 ```javascript
 name: defer(cfg => ({
@@ -46,24 +43,52 @@ name: defer(cfg => ({
 })),
 ```
 
-To avoid making this mistake, you could adopt the convention that any value that depends on other config values should be wrapped in its own deferred function.
-
-***Only own-properties are available***
+To avoid making this mistake, you could adopt the convention that any "leaf" value that depends on other config information should be wrapped in its own deferred function.
 
 
+## Algorithm
 
+During resolution, the software maintains two trees of data:
 
-During resolution, it maintains two heirarchical trees of data:
- * 1. the config tree, which is the original config data, that includes atoms, objects, and
- *    deferreds (no resolvers)
- * 2. nd the
- * resolver tree,
- * which shadows, or
-proxies, the config tree.
+1. config tree, which is the original config data, that includes atoms, objects,
+  and deferreds (no resolvers)
+2. resolver tree, which proxies the config tree, and has nodes *only* of type 
+  atom and resolver (no objects or deferreds). The resolver tree nodes are
+  constructed dynamically by the getters, but the tree can be thought of as 
+  static. 
 
-  The config tree has only atoms, objects, and deferreds (no resolvers)
+These routines are involved during the resolution process:
 
-The resolver tree uses getters, but can be thought of as a static tree. It has
-only atoms and resolvers -- a get operation never returns an object. The atoms
-are the original object from the config tree.
-*/
+***resolve(config)***
+
+The main entry point. This function resolves the entire config tree, evaluating 
+and replacing all deferreds.
+
+It creates a new Resolver object (the "main resolver") from `config` (which is 
+the "main" config, or the root of the config tree) and delegates to its 
+`resolve()` method. Note that this "main resolver" is the object that gets 
+passed in as the `cfg` argument of the deferred functions.
+
+***resolver.resolve()***
+
+This resolves the config subtree corresponding to this resolver. It is a very
+simple recursive process: it iterates over its child nodes, which must be either
+atoms or resolvers:
+
+* If atom, it is inserted into the config object.
+* If resolver:
+    * Recurse: call its `resolve()` method
+    * Insert this child resolver's config node into our config object 
+
+***resolver getters***
+
+These invoke `.newNode()` to construct new nodes in the resolver tree, and store 
+the results (each node is only created once).
+
+***resolver.newNode()***
+
+The argument to this is a node from either the config tree or the resolver tree
+(in other words, it can be of any type). If it's an atom or resolver, this merely
+passes it along. If it is a deferred, this executes the deferred recursively,
+until the return value is something else. If it is an object, then a new
+Resolver object is created to wrap it, and that is returned.

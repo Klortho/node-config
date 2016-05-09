@@ -1,28 +1,30 @@
 // See resolver.md for some notes about how this works.
 
-// Class that wraps special functions that are evaluated after all config overrides are in place.
+// Class that wraps special functions that are evaluated after all config 
+// overrides are in place.
 function DeferredConfig () {}
 
-// Users use this function in their JavaScript config files to specify config values that depend
-// on others. This returns a DeferredConfig object.
+// Users use this function in their JavaScript config files to specify config 
+// values that depend on others. This returns a DeferredConfig object that
+// wraps the function (refered to simply as "the deferred").
 function deferConfig(func) {
   var obj = Object.create(DeferredConfig.prototype);
   obj.resolve = func;
   return obj;
 }
 
-// The main function that resolves all of the deferreds.
+// The main function that resolves the entire config tree, evaluating and
+// replacing all deferreds.
 function resolve(mainConfig) {
   var main = new Resolver(mainConfig);
   main.resolve();
 }
 
-// Resolver objects define getters for each of the properties in a config object.
-// The purpose of the Resolver objects is to proxy the config objects, so that they
+// Resolver objects define getters for each of the properties in a config node.
+// The purpose of the Resolver objects is to proxy those nodes, so that they
 // can participate in expressions inside deferred functions.
-// Restriction: only enumerable, "own" properties are proxied. So, for example, you can't use
-// them with class methods.
-// The constructor does not recurse; it only defines getters for the immediate children.
+// The constructor itself does not recurse; it only defines getters for the 
+// immediate children.
 var Resolver = function(config, main) {
   var self = this;
   if (!main) main = self;
@@ -61,10 +63,10 @@ var Resolver = function(config, main) {
   });
 };
 
-// resolver.newNode() - passes through or creates resolver tree nodes corresponding to config
-// tree nodes. The `node` argument can be of any type. This evaluates deferred functions, and wraps
-// config objects in resolvers, as needed.
-// Contract: the return value is guaranteed to be an atom or a resolver
+// resolver.newNode() - passes through or creates resolver tree nodes 
+// corresponding to config tree nodes. The `node` argument can be of any type. 
+// This evaluates deferred functions, and wraps config objects in resolvers, as 
+// needed. Contract: the return value is guaranteed to be an atom or a resolver
 Resolver.prototype.newNode = function(node) {
   var self = this,
       main = self.__data__.main;
@@ -77,11 +79,11 @@ Resolver.prototype.newNode = function(node) {
 };
 
 // resolver.resolve() - recursively resolves all of the data in the config tree.
-// Contract: after this executes, the `config` node corresponding to this resolver will be an
-// atom or an object tree such that:
+// Contract: after this executes, the `config` node corresponding to this 
+// resolver will be an atom or an object tree such that:
 // - there are no deferreds or resolvers anywhere in the tree
-// - every node in the tree is the corresponding original atom or object from the config
-//   tree (i.e., there are no clones)
+// - every node in the tree is the corresponding original atom or object from 
+//   the config tree (i.e., there are no clones)
 Resolver.prototype.resolve = function() {
   var self = this,
       data = self.__data__,
@@ -98,14 +100,15 @@ Resolver.prototype.resolve = function() {
   });
 };
 
-// There are four main types for the nodes in a configuration tree: atoms, objects (which
-// include arrays), DeferredConfigs (deferreds, for short), and resolvers.
+// There are four main types for the nodes in a configuration tree: atoms, 
+// objects (which include arrays), DeferredConfigs (deferreds, for short), and 
+// resolvers.
 var nodeType = function(node) {
   if (node instanceof Resolver) return 'resolver';
   if (typeof node !== 'object' || !node) return 'atom';
   if (node instanceof Date) return 'atom';
-  // The test for DeferredConfig addresses the concern in this PR (but it's not a complete fix):
-  // https://github.com/lorenwest/node-config/pull/205.
+  // The test for DeferredConfig addresses the concern in this PR (but it's not 
+  // a complete fix): https://github.com/lorenwest/node-config/pull/205.
   if (node instanceof DeferredConfig ||
     (('constructor' in node) && (node.constructor.name === 'DeferredConfig')))
     return 'deferred';
