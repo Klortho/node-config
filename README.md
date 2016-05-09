@@ -1,7 +1,3 @@
-
-
-
-
 Configure your Node.js Applications
 ===================================
 
