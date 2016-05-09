@@ -16,7 +16,10 @@ var RealServiceAdapter = function() {
 RealServiceAdapter.prototype.message = 'Real thing';
 
 config.service = {
-
+  registry: {
+    'real': new RealServiceAdapter(),
+  },
+  activeName: 'real',
 };
 /*
 config.service = {
