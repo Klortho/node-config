@@ -8,6 +8,16 @@ config.map = {
   centerPoint :  { lat: 3, lon: 4 },
 };
 
+
+///////////////////////////////////////////////////
+var RealServiceAdapter = function() {
+  this.service = 'mock service';
+};
+RealServiceAdapter.prototype.message = 'Real thing';
+
+config.service = {
+
+};
 /*
 config.service = {
   name: 'mock',
