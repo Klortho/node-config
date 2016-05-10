@@ -82,11 +82,13 @@ Resolver.prototype.newNode = function(node) {
 };
 
 // resolver.resolve() - recursively resolves all of the data in the config tree.
-// Contract: after this executes, the `config` node corresponding to this 
-// resolver will be an atom or an object tree such that:
-// - there are no deferreds or resolvers anywhere in the tree
-// - every node in the tree is the corresponding original atom or object from 
-//   the config tree (i.e., there are no clones)
+// Contract: 
+// - The `config` property of this resolver will always reference the same 
+//   JavaScript object. The child properties will change, but `config` will 
+//   reference the same object in memory.
+// - After this method executes, the entire config subtree rooted at this
+//   resolver's `config` property will be either an atom or an object tree 
+//   such that there are no deferreds or resolvers anywhere in the tree.
 Resolver.prototype.resolve = function() {
   var self = this,
       data = self.__data__,
