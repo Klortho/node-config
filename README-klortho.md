@@ -19,9 +19,18 @@ for the `fix-deferreds` subdirectory here, which is a little test project.
 * What *exactly* are the limitations with regards to objects & class
   instances? Does it behave correctly for functions, Dates, and other
   kinds of things?
-* (Related) Check it against https://github.com/lorenwest/node-config/pull/175 -
-  I'm concerned about how my implementation will behave inside extendDeep,
-  or other functions
+* Write an article for the wiki. See the list at the end of the README.
+
+* Record more limitations:
+    * Inside a deferred function, the objects corresponding to the config
+      nodes are not the nodes themselves, they are resolvers that proxy
+      the members of the config node. So, they don't behave 100% the same.
+      You can't mutate one, for example. This is illegal:
+      `λ(c => c.x++)`
+    * The resolvers only proxy "own enumerable properties", so you can't
+      access methods of a class, for example. But note that if an object
+      has a function as its *own* property, then you can call it through
+      a resolver, no problem.  
 
 Enhancements:
 
@@ -34,7 +43,6 @@ Enhancements:
 ## Other issues / PRs
 
 ### [266 - deferred values in final config](https://github.com/lorenwest/node-config/issues/266)
-
 
 ### [231 - Deferred configuration values are not resolved inside arrays](https://github.com/lorenwest/node-config/issues/231)
 
