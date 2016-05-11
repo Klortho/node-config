@@ -1,63 +1,37 @@
 # klortho's fork
 
-This branch is a fix to the problem with deferreds in node-config.
+This fork contains a fix ([PR 
+#266, from branch 
+`resolver`)](https://github.com/lorenwest/node-config/pull/318) to the 
+[problem with 
+deferreds](https://github.com/lorenwest/node-config/issues/266#issuecomment-217063840) 
+in node-config.
 
-See:
+I'm maintaining this branch, `fix-deferreds`, for now as a sandbox.
+See the `fix-deferreds` subdirectory here, which has some extra test
+scripts.
 
-* Discussion in [issue 
-  #266](https://github.com/lorenwest/node-config/issues/266#issuecomment-217063840)
-* [PR #266](https://github.com/lorenwest/node-config/pull/318) - from the
-  `resolver` branch here.
-* [lib/resolver.md](lib/resolver.md) - describes the algorithm in some
-  detail
+See also [lib/resolver.md](lib/resolver.md), which describes the 
+algorithm in some detail
 
-I'm maintaining this branch for now as a sandbox -- for these notes, and
-for the `fix-deferreds` subdirectory here, which is a little test project.
+For now, my efforts have shifted over to
+[config-one](https://github.com/Klortho/config-one).
+
 
 ## To do
 
-* What *exactly* are the limitations with regards to objects & class
-  instances? Does it behave correctly for functions, Dates, and other
-  kinds of things?
-* Write an article for the wiki. See the list at the end of the README.
+* Write an article for the wiki. See the list at the end of the README;
+  where would this article fit in?
 
-* Record more limitations:
-    * Inside a deferred function, the objects corresponding to the config
-      nodes are not the nodes themselves, they are resolvers that proxy
-      the members of the config node. So, they don't behave 100% the same.
-      You can't mutate one, for example. This is illegal:
-      `λ(c => c.x++)`
-    * The resolvers only proxy "own enumerable properties", so you can't
-      access methods of a class, for example. But note that if an object
-      has a function as its *own* property, then you can call it through
-      a resolver, no problem.  
+* See which of these other issues can be addressed:
 
-Enhancements:
+    * [266 - deferred values in final 
+      config](https://github.com/lorenwest/node-config/issues/266)
 
-* Allow passing in a "relative" argument to a deferred: a resolver that
-  represents the *current* node. You could subscript it with '..' to go
-  up (meaning it would have to have a getter for that string). You could
-  use this feature to create aliases for any config node.
+    * [231 - Deferred configuration values are not resolved inside 
+      arrays](https://github.com/lorenwest/node-config/issues/231)
+
+    * [205 - PR: Support DeferredConfig-like 
+      objects](https://github.com/lorenwest/node-config/pull/205)
 
 
-## Other issues / PRs
-
-### [266 - deferred values in final config](https://github.com/lorenwest/node-config/issues/266)
-
-### [231 - Deferred configuration values are not resolved inside arrays](https://github.com/lorenwest/node-config/issues/231)
-
-This PR will fix this issue
-
-### [205 - PR: Support DeferredConfig-like objects](https://github.com/lorenwest/node-config/pull/205)
-
-
-## References / see also
-
-* Wiki article on [Submodule 
-  configs](https://github.com/lorenwest/node-config/wiki/Sub-Module-Configuration)
-* Python 
-  [settings-resolver](https://github.com/Klortho/settings-resolver/blob/master/settings_resolver.py)
-* [grunt-template-functions](https://github.com/Klortho/grunt-template-functions) - 
-  This is incomplete, because it doesn't use getters.
-* My xmltools (stash: /projects/JATS/repos/xmltools/browse/main.js) scheme for 
-  recursively instantiating configurable objects.
